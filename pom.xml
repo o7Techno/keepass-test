@@ -4,8 +4,11 @@
   <artifactId>keepass-test</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
   </properties>
 <dependencies>
   	<!-- JUnit 5 (Aynı kalıyor) -->
@@ -30,6 +33,13 @@
   		<groupId>org.seleniumhq.selenium</groupId>
   		<artifactId>selenium-java</artifactId>
   		<version>3.141.59</version>
+  	</dependency>
+
+  	<!-- HWND → вторичная сессия WinAppDriver для системного Save-as (#32770) -->
+  	<dependency>
+  		<groupId>net.java.dev.jna</groupId>
+  		<artifactId>jna-platform</artifactId>
+  		<version>5.14.0</version>
   	</dependency>
   </dependencies>
 </project>
