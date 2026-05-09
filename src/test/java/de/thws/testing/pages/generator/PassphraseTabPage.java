@@ -11,7 +11,6 @@ public class PassphraseTabPage {
 
 	private WindowsDriver driver;
 
-	// --- Senin Bulduğun Jilet Gibi Locator'lar ---
 	private By passphraseTabButton = MobileBy.name("Passphrase");
 
 	private By wordCountSpinBox = MobileBy.AccessibilityId(
@@ -36,8 +35,6 @@ public class PassphraseTabPage {
 		this.driver = driver;
 	}
 
-	// --- Action Methods ---
-
 	public void clickPassphraseTab() {
 		driver.findElement(passphraseTabButton).click();
 	}
@@ -58,18 +55,16 @@ public class PassphraseTabPage {
 		sepBox.sendKeys(separator);
 	}
 
-	// SMART SELECTION: ComboBox'ı açar ve senin gönderdiğin Name değeriyle seçer
 	public void selectWordCase(String caseName) {
 		WebElement comboBox = driver.findElement(wordCaseComboBox);
-		comboBox.click(); // Menüyü aç
+		comboBox.click();
 
 		try {
-			Thread.sleep(300); // Menünün animasyonla açılması için kısa bir bekleme
+			Thread.sleep(300);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 
-		// "UPPER CASE", "Title Case" vb. seçenekleri isminden bulup tıkla
 		driver.findElement(MobileBy.name(caseName)).click();
 	}
 
@@ -81,8 +76,6 @@ public class PassphraseTabPage {
 		return driver.findElement(deleteWordListButton).isDisplayed();
 	}
 
-	// ComboBox'a tıklar ve klavyenin YUKARI ok tuşunu kullanarak listedeki başka
-	// bir wordlist'e geçer
 	public void selectDifferentWordList() {
 		WebElement comboBox = driver.findElement(wordListComboBox);
 		comboBox.click();
@@ -91,7 +84,7 @@ public class PassphraseTabPage {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		// Listede yukarı çıkıp Enter'a basarak farklı bir liste seçiyoruz
+
 		comboBox.sendKeys(Keys.UP);
 		comboBox.sendKeys(Keys.ENTER);
 	}
