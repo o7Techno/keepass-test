@@ -1,0 +1,35 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.thws.testing</groupId>
+  <artifactId>keepass-test</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+  </properties>
+<dependencies>
+  	<!-- JUnit 5 (Aynı kalıyor) -->
+  	<dependency>
+  		<groupId>org.junit.jupiter</groupId>
+  		<artifactId>junit-jupiter-api</artifactId>
+  		<version>5.9.2</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.junit.jupiter</groupId>
+  		<artifactId>junit-jupiter-engine</artifactId>
+  		<version>5.9.2</version>
+  	</dependency>
+  	
+  	<!-- WinAppDriver'ın %100 sorunsuz çalıştığı Efsane Sürüm İkilisi -->
+  	<dependency>
+  		<groupId>io.appium</groupId>
+  		<artifactId>java-client</artifactId>
+  		<version>7.6.0</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.seleniumhq.selenium</groupId>
+  		<artifactId>selenium-java</artifactId>
+  		<version>3.141.59</version>
+  	</dependency>
+  </dependencies>
+</project>
