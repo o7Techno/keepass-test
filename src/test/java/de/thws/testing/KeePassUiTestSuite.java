@@ -9,6 +9,7 @@ import de.thws.testing.tests.generator.BasicPasswordTest;
 import de.thws.testing.tests.generator.PassphraseTest;
 
 @Suite
-@SelectClasses({ BasicPasswordTest.class, AdvancedPasswordTest.class, PassphraseTest.class, EntryTabTest.class })
+@SelectClasses({ BasicPasswordTest.class, AdvancedPasswordTest.class, PassphraseTest.class, EntryTabTest.class,
+		UnlockTest.class, DatabaseCreationTest.class })
 public class KeePassUiTestSuite {
 }
