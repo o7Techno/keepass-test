@@ -9,8 +9,9 @@ import io.appium.java_client.windows.WindowsDriver;
 
 public final class SuiteDatabaseSupport {
 
-	private static final String SUITE_DIR = ".keepass-junit-suite";
 	private static final String SUITE_FILENAME = "suite.kdbx";
+
+	private static final Path RELATIVE_SUITE_ROOT = Path.of("target", ".keepass-junit-suite");
 
 	private static final String PROP_DB = "keepass.suite.database";
 	private static final String PROP_MASTER = "keepass.suite.master";
@@ -20,21 +21,24 @@ public final class SuiteDatabaseSupport {
 	private SuiteDatabaseSupport() {
 	}
 
+	public static Path suiteWorkspaceDirectory() {
+		return Path.of(System.getProperty("user.dir")).resolve(RELATIVE_SUITE_ROOT).toAbsolutePath().normalize();
+	}
+
 	public static Path suiteDatabasePath() {
 		String override = System.getProperty(PROP_DB);
 		if (override != null && !override.isBlank()) {
-			return Path.of(override).toAbsolutePath().normalize();
+			Path p = Path.of(override.trim());
+			if (!p.isAbsolute()) {
+				p = Path.of(System.getProperty("user.dir")).resolve(p).normalize();
+			}
+			return p.toAbsolutePath().normalize();
 		}
-		return Path.of(System.getProperty("user.home")).resolve(SUITE_DIR).resolve(SUITE_FILENAME).toAbsolutePath()
-				.normalize();
+		return suiteWorkspaceDirectory().resolve(SUITE_FILENAME).normalize();
 	}
 
 	public static String suiteDatabasePathForSaveDialog() {
-		String override = System.getProperty(PROP_DB);
-		if (override != null && !override.isBlank()) {
-			return Path.of(override).toAbsolutePath().normalize().toString();
-		}
-		return "%USERPROFILE%\\" + SUITE_DIR + "\\" + SUITE_FILENAME;
+		return suiteDatabasePath().toString();
 	}
 
 	public static String suiteMasterPassword() {
@@ -73,8 +77,8 @@ public final class SuiteDatabaseSupport {
 			}
 
 			if (!Files.exists(db)) {
-				throw new IllegalStateException("Suite database missing at " + db
-						+ ". Check Save-as path from suiteDatabasePathForSaveDialog() and %USERPROFILE% expansion.");
+				throw new IllegalStateException(
+						"Suite database missing at " + db + ". Check Save-as path matches suiteDatabasePath().");
 			}
 		}
 	}

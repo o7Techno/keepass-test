@@ -12,6 +12,8 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -27,6 +29,7 @@ import de.thws.testing.utils.DriverFactory;
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.windows.WindowsDriver;
 
+@EnabledOnOs(OS.WINDOWS)
 @Execution(ExecutionMode.SAME_THREAD)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class EntryTabTest {

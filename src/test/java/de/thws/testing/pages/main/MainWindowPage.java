@@ -209,6 +209,62 @@ public class MainWindowPage {
 		throw new IllegalStateException("Toolbar button found but could not be invoked (WinAppDriver/Qt).", last);
 	}
 
+	/**
+	 * Best-effort: exit quick-search / clear entry list filter. Must not throw —
+	 * WinAppDriver often returns "unknown error" on broad XPath or fragile edits.
+	 */
+	public void clearEntrySearchFilter() {
+		driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
+		try {
+			try {
+				String xp = "//*[@ClassName='QLineEdit' and "
+						+ "(contains(@AutomationId,'search') or contains(@AutomationId,'Search'))]";
+				int n = 0;
+				for (Object o : driver.findElements(By.xpath(xp))) {
+					if (!(o instanceof WebElement)) {
+						continue;
+					}
+					if (++n > 3) {
+						break;
+					}
+					WebElement el = (WebElement) o;
+					try {
+						if (el.isDisplayed()) {
+							el.click();
+							el.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+							el.sendKeys(Keys.BACK_SPACE);
+							sleepMs(50);
+						}
+					} catch (RuntimeException ignored) {
+					}
+				}
+			} catch (RuntimeException ignored) {
+			}
+			try {
+				driver.findElement(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW)).click();
+				sleepMs(80);
+			} catch (RuntimeException ignored) {
+			}
+			try {
+				new Actions(driver).sendKeys(Keys.ESCAPE).perform();
+				sleepMs(60);
+				new Actions(driver).sendKeys(Keys.ESCAPE).perform();
+				sleepMs(60);
+			} catch (RuntimeException ignored) {
+			}
+		} finally {
+			driver.manage().timeouts().implicitlyWait(IMPLICIT_RESTORE_SEC, TimeUnit.SECONDS);
+		}
+	}
+
+	private static void sleepMs(long ms) {
+		try {
+			Thread.sleep(ms);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+	}
+
 	public void doubleClickFirstEntry() {
 		WebDriverWait wait = new WebDriverWait(driver, 15);
 		WebElement list = wait.until(ExpectedConditions
@@ -222,6 +278,8 @@ public class MainWindowPage {
 	public void doubleClickEntryWithTitleContaining(String titleSubstring) {
 		driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
 		try {
+			clearEntrySearchFilter();
+			driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
 			WebDriverWait wait = new WebDriverWait(driver, 25, 200);
 			wait.until(ExpectedConditions
 					.visibilityOfElementLocated(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW)));

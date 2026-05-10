@@ -7,15 +7,13 @@ import java.nio.file.Path;
 
 public final class KeePassAutomationLocalConfig {
 
-	private static final String SUITE_DIR = ".keepass-junit-suite";
 	private static final String LOCAL_INI_NAME = "keepassxc-local.ini";
 
 	private KeePassAutomationLocalConfig() {
 	}
 
 	public static Path localConfigFile() {
-		return Path.of(System.getProperty("user.home")).resolve(SUITE_DIR).resolve(LOCAL_INI_NAME).toAbsolutePath()
-				.normalize();
+		return SuiteDatabaseSupport.suiteWorkspaceDirectory().resolve(LOCAL_INI_NAME).toAbsolutePath().normalize();
 	}
 
 	public static void ensureQuickUnlockDisabled() throws IOException {

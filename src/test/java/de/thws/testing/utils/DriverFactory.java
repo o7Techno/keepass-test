@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import de.thws.testing.support.KeePassAutomationLocalConfig;
+import de.thws.testing.support.PlatformSupport;
 import io.appium.java_client.windows.WindowsDriver;
 
 public class DriverFactory {
@@ -27,6 +28,9 @@ public class DriverFactory {
 
 	@SuppressWarnings("rawtypes")
 	public static WindowsDriver createKeePassDriverOpeningDatabase(String absoluteDatabasePath) {
+		if (!PlatformSupport.isWindows()) {
+			throw new UnsupportedOperationException("WinAppDriver UI tests require Windows.");
+		}
 		try {
 			DesiredCapabilities capabilities = new DesiredCapabilities();
 

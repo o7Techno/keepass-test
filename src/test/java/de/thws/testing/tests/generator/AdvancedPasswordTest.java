@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import de.thws.testing.pages.HomePage;
 import de.thws.testing.pages.generator.AdvancedPanel;
@@ -14,6 +16,7 @@ import de.thws.testing.pages.generator.PasswordTabPage;
 import de.thws.testing.utils.DriverFactory;
 import io.appium.java_client.windows.WindowsDriver;
 
+@EnabledOnOs(OS.WINDOWS)
 public class AdvancedPasswordTest {
 
 	private WindowsDriver driver;

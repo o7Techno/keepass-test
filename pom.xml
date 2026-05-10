@@ -36,5 +36,31 @@
   		<artifactId>jna-platform</artifactId>
   		<version>5.14.0</version>
   	</dependency>
+  	<dependency>
+  		<groupId>org.junit.platform</groupId>
+  		<artifactId>junit-platform-suite-api</artifactId>
+  		<version>1.9.2</version>
+  		<scope>test</scope>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.junit.platform</groupId>
+  		<artifactId>junit-platform-suite-engine</artifactId>
+  		<version>1.9.2</version>
+  		<scope>test</scope>
+  	</dependency>
   </dependencies>
+  <build>
+  	<plugins>
+  		<plugin>
+  			<groupId>org.apache.maven.plugins</groupId>
+  			<artifactId>maven-surefire-plugin</artifactId>
+  			<version>3.2.5</version>
+  			<configuration>
+  				<includes>
+  					<include>**/KeePassUiTestSuite.java</include>
+  				</includes>
+  			</configuration>
+  		</plugin>
+  	</plugins>
+  </build>
 </project>
