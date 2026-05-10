@@ -1,16 +1,18 @@
 package de.thws.testing.pages.generator;
 
+import java.util.List;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
+import de.thws.testing.pages.BasePage;
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.windows.WindowsDriver;
 
-public class PasswordTabPage {
+public class PasswordTabPage extends BasePage {
 
-	private WindowsDriver driver;
-
+	// --- LOCATORS ---
 	private By uppercaseCheckbox = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.passwordWidget.groupBox.checkBoxUpper");
 	private By lowercaseCheckbox = MobileBy.AccessibilityId(
@@ -26,82 +28,61 @@ public class PasswordTabPage {
 
 	private By advancedModeButton = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.passwordWidget.buttonAdvancedMode");
-
 	private By editExcludedChars = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.passwordWidget.groupBox.advancedContainer.editExcludedChars");
 
+	private By passwordTabButton = MobileBy.xpath(
+			"//*[@Name='Password' and (@LocalizedControlType='tab item' or @ControlType='ControlType.TabItem')]");
+
 	public PasswordTabPage(WindowsDriver driver) {
-		this.driver = driver;
+		super(driver);
+	}
+
+	private void setCheckboxState(By locator, boolean targetState) {
+		WebElement cb = driver.findElement(locator);
+		if (cb.isSelected() != targetState) {
+			forceClick(cb);
+		}
 	}
 
 	public void enableUppercase() {
-		WebElement cb = driver.findElement(uppercaseCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(uppercaseCheckbox, true);
 	}
 
 	public void disableUppercase() {
-		WebElement cb = driver.findElement(uppercaseCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(uppercaseCheckbox, false);
 	}
 
 	public void enableLowercase() {
-		WebElement cb = driver.findElement(lowercaseCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(lowercaseCheckbox, true);
 	}
 
 	public void disableLowercase() {
-		WebElement cb = driver.findElement(lowercaseCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(lowercaseCheckbox, false);
 	}
 
 	public void enableNumbers() {
-		WebElement cb = driver.findElement(numbersCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(numbersCheckbox, true);
 	}
 
 	public void disableNumbers() {
-		WebElement cb = driver.findElement(numbersCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(numbersCheckbox, false);
 	}
 
 	public void enableSpecialChars() {
-		WebElement cb = driver.findElement(specialCharsCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(specialCharsCheckbox, true);
 	}
 
 	public void disableSpecialChars() {
-		WebElement cb = driver.findElement(specialCharsCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(specialCharsCheckbox, false);
 	}
 
 	public void enableExtASCII() {
-		WebElement cb = driver.findElement(extASCIICheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(extASCIICheckbox, true);
 	}
 
 	public void disableExtASCII() {
-		WebElement cb = driver.findElement(extASCIICheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(extASCIICheckbox, false);
 	}
 
 	public void setPasswordLength(String length) {
@@ -113,13 +94,26 @@ public class PasswordTabPage {
 	}
 
 	public void ensureAdvancedModeOpen() {
-		try {
-			boolean isAdvancedVisible = driver.findElement(editExcludedChars).isDisplayed();
-			if (!isAdvancedVisible) {
-				driver.findElement(advancedModeButton).click();
+		if (driver.findElements(editExcludedChars).isEmpty()) {
+			forceClick(driver.findElement(advancedModeButton));
+		}
+	}
+
+	public void ensurePasswordTabOpen() {
+		if (driver.findElements(lengthSpinBox).isEmpty()) {
+			System.out.println("Currently on Passphrase tab. Switching to Password tab...");
+			try {
+				driver.findElement(passwordTabButton).click();
+			} catch (Exception clickEx) {
+				List<WebElement> passElements = driver.findElements(MobileBy.name("Password"));
+				if (passElements.size() > 1) {
+					passElements.get(1).click();
+				} else if (!passElements.isEmpty()) {
+					passElements.get(0).click();
+				}
 			}
-		} catch (org.openqa.selenium.NoSuchElementException e) {
-			driver.findElement(advancedModeButton).click();
+		} else {
+			System.out.println("Already on the Password tab. Skipping click.");
 		}
 	}
 }

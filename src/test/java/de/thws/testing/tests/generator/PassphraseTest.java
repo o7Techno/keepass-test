@@ -7,27 +7,33 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 
-import de.thws.testing.pages.HomePage;
 import de.thws.testing.pages.generator.GeneratorCommonPage;
 import de.thws.testing.pages.generator.PassphraseTabPage;
+import de.thws.testing.pages.main.MainWindowPage;
+import de.thws.testing.pages.unlock.UnlockPage;
+import de.thws.testing.support.SuiteDatabaseSupport;
+import de.thws.testing.tests.BaseTest;
 import de.thws.testing.utils.DriverFactory;
-import io.appium.java_client.windows.WindowsDriver;
 
-@EnabledOnOs(OS.WINDOWS)
-public class PassphraseTest {
+public class PassphraseTest extends BaseTest {
 
-	private WindowsDriver driver;
-	private HomePage homePage;
+	private MainWindowPage homePage;
 	private GeneratorCommonPage commonPage;
 	private PassphraseTabPage passphraseTab;
 
 	@BeforeEach
-	public void setUp() throws InterruptedException {
-		driver = DriverFactory.createKeePassDriver();
-		homePage = new HomePage(driver);
+	public void setUp() throws Exception {
+		String dbPath = SuiteDatabaseSupport.suiteDatabasePath().toAbsolutePath().toString();
+		driver = DriverFactory.createKeePassDriverOpeningDatabase(dbPath);
+		Thread.sleep(1500);
+
+		UnlockPage unlockPage = new UnlockPage(driver);
+		unlockPage.enterMasterPassword(SuiteDatabaseSupport.suiteMasterPassword());
+		unlockPage.clickUnlockButton();
+		Thread.sleep(1500);
+
+		homePage = new MainWindowPage(driver);
 		commonPage = new GeneratorCommonPage(driver);
 		passphraseTab = new PassphraseTabPage(driver);
 
@@ -52,11 +58,11 @@ public class PassphraseTest {
 		Thread.sleep(500);
 
 		String newPassphrase = commonPage.getGeneratedPassword();
-
 		int spaceCount = newPassphrase.length() - newPassphrase.replace(" ", "").length();
 
-		assertTrue(newPassphrase.length() > 10);
-		assertEquals(6, spaceCount);
+		assertTrue(newPassphrase.length() > 10, "ERROR: Passphrase is too short!");
+		assertEquals(6, spaceCount, "ERROR: Default 7 words should have exactly 6 spaces!");
+		System.out.println("Test 1 Passed: Default passphrase generation verified.");
 	}
 
 	@Test
@@ -68,10 +74,10 @@ public class PassphraseTest {
 		Thread.sleep(500);
 
 		String newPassphrase = commonPage.getGeneratedPassword();
-
 		int spaceCount = newPassphrase.length() - newPassphrase.replace(" ", "").length();
 
-		assertEquals(3, spaceCount);
+		assertEquals(3, spaceCount, "ERROR: 4 words should have exactly 3 spaces!");
+		System.out.println("Test 2 Passed: Custom word count verified.");
 	}
 
 	@Test
@@ -84,8 +90,10 @@ public class PassphraseTest {
 
 		String newPassphrase = commonPage.getGeneratedPassword();
 
-		assertTrue(newPassphrase.contains("-"));
-		assertFalse(newPassphrase.contains(" "));
+		assertTrue(newPassphrase.contains("-"), "ERROR: Passphrase does not contain the custom separator!");
+		assertFalse(newPassphrase.contains(" "),
+				"ERROR: Passphrase still contains spaces instead of the custom separator!");
+		System.out.println("Test 3 Passed: Custom separator '-' verified.");
 	}
 
 	@Test
@@ -98,7 +106,8 @@ public class PassphraseTest {
 
 		String newPassphrase = commonPage.getGeneratedPassword();
 
-		assertEquals(newPassphrase.toUpperCase(), newPassphrase);
+		assertEquals(newPassphrase.toUpperCase(), newPassphrase, "ERROR: Passphrase is not in UPPER CASE!");
+		System.out.println("Test 4 Passed: UPPER CASE word format verified.");
 	}
 
 	@Test
@@ -113,8 +122,10 @@ public class PassphraseTest {
 
 		String[] words = newPassphrase.split(" ");
 		for (String word : words) {
-			assertTrue(Character.isUpperCase(word.charAt(0)), word);
+			assertTrue(Character.isUpperCase(word.charAt(0)),
+					"ERROR: Word does not start with an uppercase letter! Word: " + word);
 		}
+		System.out.println("Test 5 Passed: Title Case word format verified.");
 	}
 
 	@Test
@@ -130,7 +141,8 @@ public class PassphraseTest {
 		boolean isNotAllUpper = !newPassphrase.equals(newPassphrase.toUpperCase());
 		boolean isNotAllLower = !newPassphrase.equals(newPassphrase.toLowerCase());
 
-		assertTrue(isNotAllUpper && isNotAllLower, newPassphrase);
+		assertTrue(isNotAllUpper && isNotAllLower, "ERROR: Passphrase is not MIXED case! Passphrase: " + newPassphrase);
+		System.out.println("Test 6 Passed: MIXED case word format verified.");
 	}
 
 	@Test
@@ -143,13 +155,15 @@ public class PassphraseTest {
 
 		String newPassphrase = commonPage.getGeneratedPassword();
 
-		assertEquals(newPassphrase.toLowerCase(), newPassphrase);
+		assertEquals(newPassphrase.toLowerCase(), newPassphrase, "ERROR: Passphrase is not in lower case!");
+		System.out.println("Test 7 Passed: lowercase word format verified.");
 	}
 
 	@Test
 	public void test8_WordlistManagement() throws InterruptedException {
-		assertTrue(passphraseTab.isAddWordListButtonDisplayed());
-		assertTrue(passphraseTab.isDeleteWordListButtonDisplayed());
+		assertTrue(passphraseTab.isAddWordListButtonDisplayed(), "ERROR: Add Custom Wordlist button is not displayed!");
+		assertTrue(passphraseTab.isDeleteWordListButtonDisplayed(), "ERROR: Delete Wordlist button is not displayed!");
+		System.out.println("Wordlist UI components are correctly displayed.");
 
 		commonPage.clickGenerateButton();
 		Thread.sleep(500);
@@ -162,20 +176,19 @@ public class PassphraseTest {
 		Thread.sleep(500);
 		String newPassphrase = commonPage.getGeneratedPassword();
 
-		assertFalse(defaultPassphrase.equals(newPassphrase));
+		assertFalse(defaultPassphrase.equals(newPassphrase),
+				"ERROR: Passphrase did not change after selecting a new Wordlist!");
+		System.out.println("Test 8 Passed: Different wordlist selection verified successfully.");
 	}
 
 	@AfterEach
-	public void tearDown() {
-		if (driver != null) {
-			try {
-				if (commonPage.isGeneratorWindowVisible()) {
-					commonPage.clickCloseButton();
-					Thread.sleep(500);
-				}
-			} catch (Exception ignored) {
+	public void closeGeneratorWindow() {
+		try {
+			if (commonPage != null && commonPage.isGeneratorWindowVisible()) {
+				commonPage.clickCloseButton();
+				Thread.sleep(500);
 			}
-			driver.quit();
+		} catch (Exception ignored) {
 		}
 	}
 }

@@ -14,11 +14,16 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import de.thws.testing.config.KeePassAccessibility;
+import de.thws.testing.pages.BasePage;
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.windows.WindowsDriver;
 
-public class MainWindowPage {
+public class MainWindowPage extends BasePage {
+
+	// --- LOCATORS ---
+	private static final String MAIN_ENTRY_VIEW = "entryView";
+	private static final String MAIN_TOOL_BAR = "MainWindow.toolBar";
+	private By diceIcon = By.name("Password Generator");
 
 	private static final String[] NEW_ENTRY_EXACT_NAMES = { "New Entry...", "New Entry\u2026",
 			"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u044c...",
@@ -32,10 +37,14 @@ public class MainWindowPage {
 
 	private static final long IMPLICIT_RESTORE_SEC = 5;
 
-	private final WindowsDriver driver;
-
 	public MainWindowPage(WindowsDriver driver) {
-		this.driver = driver;
+		super(driver);
+	}
+
+	public void openPasswordGenerator() {
+		WebDriverWait wait = new WebDriverWait(driver, 5);
+		WebElement diceButton = wait.until(ExpectedConditions.elementToBeClickable(diceIcon));
+		diceButton.click();
 	}
 
 	public void clickNewEntry() {
@@ -44,48 +53,47 @@ public class MainWindowPage {
 			WebElement btn = findNewEntryToolbarButtonOnce(driver);
 			if (btn == null) {
 				throw new NoSuchElementException(
-						"New Entry toolbar button not found under AutomationId=" + KeePassAccessibility.MAIN_TOOL_BAR);
+						"New Entry toolbar button not found under AutomationId=" + MAIN_TOOL_BAR);
 			}
-			invokeQtToolBarButton(btn);
+			forceClick(btn);
 		} finally {
 			driver.manage().timeouts().implicitlyWait(IMPLICIT_RESTORE_SEC, TimeUnit.SECONDS);
 		}
 	}
 
 	private WebElement findNewEntryToolbarButtonOnce(WebDriver d) {
-		String barId = KeePassAccessibility.MAIN_TOOL_BAR;
-
 		for (String exact : NEW_ENTRY_EXACT_NAMES) {
 			WebElement hit = firstOrNull(
-					d.findElements(By.xpath("//*[@AutomationId='" + barId + "']//*[@Name='" + exact + "']")));
+					d.findElements(By.xpath("//*[@AutomationId='" + MAIN_TOOL_BAR + "']//*[@Name='" + exact + "']")));
 			if (hit != null) {
 				return hit;
 			}
 			hit = firstOrNull(d.findElements(
-					By.xpath("//ToolBar[@AutomationId='" + barId + "']//*[@Name='" + exact + "']")));
+					By.xpath("//ToolBar[@AutomationId='" + MAIN_TOOL_BAR + "']//*[@Name='" + exact + "']")));
 			if (hit != null) {
 				return hit;
 			}
 		}
 
-		for (String xp : xpathsNewEntryQtToolButton(barId)) {
+		for (String xp : xpathsNewEntryQtToolButton(MAIN_TOOL_BAR)) {
 			WebElement hit = firstOrNull(d.findElements(By.xpath(xp)));
 			if (hit != null) {
 				return hit;
 			}
 		}
 
-		WebElement hit = scanToolbarSubtreeForQtNewEntry(d, "//*[@AutomationId='" + barId + "']");
+		WebElement hit = scanToolbarSubtreeForQtNewEntry(d, "//*[@AutomationId='" + MAIN_TOOL_BAR + "']");
 		if (hit != null) {
 			return hit;
 		}
-		hit = scanToolbarSubtreeForQtNewEntry(d, "//ToolBar[@AutomationId='" + barId + "']");
+
+		hit = scanToolbarSubtreeForQtNewEntry(d, "//ToolBar[@AutomationId='" + MAIN_TOOL_BAR + "']");
 		if (hit != null) {
 			return hit;
 		}
 
 		try {
-			WebElement bar = d.findElement(MobileBy.AccessibilityId(barId));
+			WebElement bar = d.findElement(MobileBy.AccessibilityId(MAIN_TOOL_BAR));
 			hit = firstMatchingNewEntry(bar.findElements(By.xpath(".//*[@ClassName='QToolButton']")));
 			if (hit != null) {
 				return hit;
@@ -114,10 +122,6 @@ public class MainWindowPage {
 			}
 		}
 		return null;
-	}
-
-	private static WebElement firstOrNull(List<WebElement> elements) {
-		return elements.isEmpty() ? null : elements.get(0);
 	}
 
 	private WebElement firstMatchingNewEntry(List<WebElement> elements) {
@@ -154,8 +158,8 @@ public class MainWindowPage {
 		if ("new entry".equals(lower)) {
 			return true;
 		}
-		return lower.contains("\u043d\u043e\u0432\u0430\u044f \u0437\u0430\u043f\u0438\u0441\u044c")
-				|| lower.contains("\u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u044c");
+		return lower.contains("\u043d\u043e\u0432\u0430\u044f \u0437\u0430\u043f\u0438\u0441\u044c") || lower
+				.contains("\u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u044c");
 	}
 
 	private String readAccessibleName(WebElement el) {
@@ -169,10 +173,7 @@ public class MainWindowPage {
 		if (n == null || n.isBlank()) {
 			n = el.getText();
 		}
-		if (n == null) {
-			return "";
-		}
-		return n.trim();
+		return n == null ? "" : n.trim();
 	}
 
 	private String readFullDescription(WebElement el) {
@@ -180,97 +181,36 @@ public class MainWindowPage {
 		return fd == null ? "" : fd.trim();
 	}
 
-	private void invokeQtToolBarButton(WebElement btn) {
-		RuntimeException last = null;
-		try {
-			btn.click();
-			return;
-		} catch (RuntimeException e) {
-			last = e;
-		}
-		try {
-			new Actions(driver).moveToElement(btn).pause(50).click().perform();
-			return;
-		} catch (RuntimeException e) {
-			last = e;
-		}
-		try {
-			new Actions(driver).moveToElement(btn).pause(40).sendKeys(Keys.SPACE).perform();
-			return;
-		} catch (RuntimeException e) {
-			last = e;
-		}
-		try {
-			btn.sendKeys(Keys.SPACE);
-			return;
-		} catch (RuntimeException e) {
-			last = e;
-		}
-		throw new IllegalStateException("Toolbar button found but could not be invoked (WinAppDriver/Qt).", last);
-	}
-
-	/**
-	 * Best-effort: exit quick-search / clear entry list filter. Must not throw —
-	 * WinAppDriver often returns "unknown error" on broad XPath or fragile edits.
-	 */
 	public void clearEntrySearchFilter() {
 		driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
 		try {
-			try {
-				String xp = "//*[@ClassName='QLineEdit' and "
-						+ "(contains(@AutomationId,'search') or contains(@AutomationId,'Search'))]";
-				int n = 0;
-				for (Object o : driver.findElements(By.xpath(xp))) {
-					if (!(o instanceof WebElement)) {
-						continue;
-					}
-					if (++n > 3) {
-						break;
-					}
-					WebElement el = (WebElement) o;
-					try {
-						if (el.isDisplayed()) {
-							el.click();
-							el.sendKeys(Keys.chord(Keys.CONTROL, "a"));
-							el.sendKeys(Keys.BACK_SPACE);
-							sleepMs(50);
-						}
-					} catch (RuntimeException ignored) {
-					}
+			String xp = "//*[@ClassName='QLineEdit' and (contains(@AutomationId,'search') or contains(@AutomationId,'Search'))]";
+			List<WebElement> searchBoxes = driver.findElements(By.xpath(xp));
+			for (int i = 0; i < Math.min(searchBoxes.size(), 3); i++) {
+				WebElement el = searchBoxes.get(i);
+				if (el.isDisplayed()) {
+					el.click();
+					el.sendKeys(Keys.chord(Keys.CONTROL, "a"), Keys.BACK_SPACE);
+					sleepMs(50);
 				}
-			} catch (RuntimeException ignored) {
 			}
-			try {
-				driver.findElement(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW)).click();
-				sleepMs(80);
-			} catch (RuntimeException ignored) {
-			}
-			try {
-				new Actions(driver).sendKeys(Keys.ESCAPE).perform();
-				sleepMs(60);
-				new Actions(driver).sendKeys(Keys.ESCAPE).perform();
-				sleepMs(60);
-			} catch (RuntimeException ignored) {
-			}
+
+			WebElement entryView = driver.findElement(MobileBy.AccessibilityId(MAIN_ENTRY_VIEW));
+			entryView.click();
+			sleepMs(80);
+			new Actions(driver).sendKeys(Keys.ESCAPE).pause(60).sendKeys(Keys.ESCAPE).perform();
+
+		} catch (RuntimeException ignored) {
 		} finally {
 			driver.manage().timeouts().implicitlyWait(IMPLICIT_RESTORE_SEC, TimeUnit.SECONDS);
 		}
 	}
 
-	private static void sleepMs(long ms) {
-		try {
-			Thread.sleep(ms);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		}
-	}
-
 	public void doubleClickFirstEntry() {
 		WebDriverWait wait = new WebDriverWait(driver, 15);
-		WebElement list = wait.until(ExpectedConditions
-				.visibilityOfElementLocated(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW)));
-		List<WebElement> rows = list
-				.findElements(By.xpath(".//ListItem | .//DataItem | .//TreeItem | .//ListBoxItem"));
+		WebElement list = wait
+				.until(ExpectedConditions.visibilityOfElementLocated(MobileBy.AccessibilityId(MAIN_ENTRY_VIEW)));
+		List<WebElement> rows = list.findElements(By.xpath(".//ListItem | .//DataItem | .//TreeItem | .//ListBoxItem"));
 		WebElement target = rows.isEmpty() ? list : rows.get(0);
 		new Actions(driver).doubleClick(target).perform();
 	}
@@ -281,26 +221,24 @@ public class MainWindowPage {
 			clearEntrySearchFilter();
 			driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
 			WebDriverWait wait = new WebDriverWait(driver, 25, 200);
-			wait.until(ExpectedConditions
-					.visibilityOfElementLocated(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW)));
+			wait.until(ExpectedConditions.visibilityOfElementLocated(MobileBy.AccessibilityId(MAIN_ENTRY_VIEW)));
 			WebElement row = wait.until(d -> {
-				WebElement list = d.findElement(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW));
+				WebElement list = d.findElement(MobileBy.AccessibilityId(MAIN_ENTRY_VIEW));
 				return findEntryRowContaining(list, titleSubstring);
 			});
 			new Actions(driver).moveToElement(row).pause(80).doubleClick().perform();
 		} catch (TimeoutException e) {
 			try {
-				WebElement list = driver.findElement(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW));
-				List<WebElement> rows = list.findElements(
-						By.xpath(".//ListItem | .//DataItem | .//TreeItem | .//ListBoxItem"));
+				WebElement list = driver.findElement(MobileBy.AccessibilityId(MAIN_ENTRY_VIEW));
+				List<WebElement> rows = list
+						.findElements(By.xpath(".//ListItem | .//DataItem | .//TreeItem | .//ListBoxItem"));
 				if (rows.size() == 1) {
 					new Actions(driver).moveToElement(rows.get(0)).pause(80).doubleClick().perform();
 					return;
 				}
 			} catch (RuntimeException ignored) {
 			}
-			throw new NoSuchElementException(
-					"entryView: no row with title containing \"" + titleSubstring + "\"", e);
+			throw new NoSuchElementException("entryView: no row with title containing \"" + titleSubstring + "\"", e);
 		} finally {
 			driver.manage().timeouts().implicitlyWait(IMPLICIT_RESTORE_SEC, TimeUnit.SECONDS);
 		}
@@ -341,9 +279,10 @@ public class MainWindowPage {
 		if (titleSubstring == null || titleSubstring.isEmpty()) {
 			return false;
 		}
+
 		driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
 		try {
-			List<WebElement> lists = driver.findElements(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW));
+			List<WebElement> lists = driver.findElements(MobileBy.AccessibilityId(MAIN_ENTRY_VIEW));
 			if (lists.isEmpty()) {
 				return false;
 			}
@@ -353,9 +292,9 @@ public class MainWindowPage {
 		}
 	}
 
-	private static WebElement findQPushButtonByName(WebElement root, String name) {
+	private WebElement findQPushButtonByName(WebElement root, String name) {
 		List<WebElement> found = root.findElements(By.xpath(".//*[@ClassName='QPushButton' and @Name='" + name + "']"));
-		return found.isEmpty() ? null : found.get(0);
+		return firstOrNull(found); // DRY UYGULAMASI: BasePage'den geldi
 	}
 
 	private static WebElement findEntryRowContaining(WebElement list, String needle) {

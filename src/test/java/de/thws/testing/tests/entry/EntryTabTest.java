@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -19,32 +18,27 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import de.thws.testing.config.KeePassAccessibility;
 import de.thws.testing.pages.entry.EntryEditDialogPage;
 import de.thws.testing.pages.generator.GeneratorCommonPage;
 import de.thws.testing.pages.main.MainWindowPage;
-import de.thws.testing.pages.unlock.UnlockDatabasePage;
+import de.thws.testing.pages.unlock.UnlockPage;
 import de.thws.testing.support.SuiteDatabaseSupport;
+import de.thws.testing.tests.BaseTest;
 import de.thws.testing.utils.DriverFactory;
 import io.appium.java_client.MobileBy;
-import io.appium.java_client.windows.WindowsDriver;
 
 @EnabledOnOs(OS.WINDOWS)
 @Execution(ExecutionMode.SAME_THREAD)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class EntryTabTest {
+
+public class EntryTabTest extends BaseTest {
 
 	private static final int AFTER_REOPEN_MS = 400;
+	private static final String ENTRY_EDIT_TITLE_ID = "editEntryWidget.stackedWidget.EditEntryWidgetMain.qt_scrollarea_viewport.container.titleEdit";
 
-	private WindowsDriver driver;
 	private EntryEditDialogPage entry;
 	private MainWindowPage main;
 	private GeneratorCommonPage generator;
-
-	@BeforeAll
-	public static void prepareSuiteDatabase() throws Exception {
-		SuiteDatabaseSupport.prepareFreshSuiteDatabase();
-	}
 
 	@BeforeEach
 	public void setUp() throws Exception {
@@ -52,12 +46,15 @@ public class EntryTabTest {
 		driver = DriverFactory.createKeePassDriverOpeningDatabase(dbPath);
 		Thread.sleep(1500);
 
-		new UnlockDatabasePage(driver).unlockIfNeeded(SuiteDatabaseSupport.suiteMasterPassword());
+		UnlockPage unlockPage = new UnlockPage(driver);
+		unlockPage.enterMasterPassword(SuiteDatabaseSupport.suiteMasterPassword());
+		unlockPage.clickUnlockButton();
+		Thread.sleep(1500);
 
 		main = new MainWindowPage(driver);
 		main.clickNewEntry();
-		new WebDriverWait(driver, 25).until(ExpectedConditions
-				.elementToBeClickable(MobileBy.AccessibilityId(KeePassAccessibility.ENTRY_EDIT_TITLE)));
+		new WebDriverWait(driver, 25)
+				.until(ExpectedConditions.elementToBeClickable(MobileBy.AccessibilityId(ENTRY_EDIT_TITLE_ID)));
 		Thread.sleep(200);
 
 		entry = new EntryEditDialogPage(driver);
@@ -66,13 +63,15 @@ public class EntryTabTest {
 
 	private void saveAndReopenByTitleMarker(String titleMarker) throws InterruptedException {
 		entry.clickOk();
-		new WebDriverWait(driver, 25, 200).until(d -> d
-				.findElements(MobileBy.AccessibilityId(KeePassAccessibility.ENTRY_EDIT_TITLE)).isEmpty());
+		new WebDriverWait(driver, 25, 200)
+				.until(d -> d.findElements(MobileBy.AccessibilityId(ENTRY_EDIT_TITLE_ID)).isEmpty());
 		Thread.sleep(300);
+
 		main.doubleClickEntryWithTitleContaining(titleMarker);
-		new WebDriverWait(driver, 25).until(ExpectedConditions
-				.elementToBeClickable(MobileBy.AccessibilityId(KeePassAccessibility.ENTRY_EDIT_TITLE)));
+		new WebDriverWait(driver, 25)
+				.until(ExpectedConditions.elementToBeClickable(MobileBy.AccessibilityId(ENTRY_EDIT_TITLE_ID)));
 		Thread.sleep(AFTER_REOPEN_MS);
+
 		entry = new EntryEditDialogPage(driver);
 	}
 
@@ -261,27 +260,21 @@ public class EntryTabTest {
 		main.dismissUnsavedChangesDiscardIfPresent();
 		Thread.sleep(400);
 
-		new WebDriverWait(driver, 25, 200).until(d -> d
-				.findElements(MobileBy.AccessibilityId(KeePassAccessibility.ENTRY_EDIT_TITLE)).isEmpty());
+		new WebDriverWait(driver, 25, 200)
+				.until(d -> d.findElements(MobileBy.AccessibilityId(ENTRY_EDIT_TITLE_ID)).isEmpty());
 
 		assertFalse(main.entryListContainsTitleSubstring(discardedTitle),
 				"Cancelled new entry should not keep this title in the list.");
 	}
 
 	@AfterEach
-	public void tearDown() {
-		if (driver != null) {
-			try {
-				if (generator.isGeneratorWindowVisible()) {
-					generator.clickCloseButton();
-					Thread.sleep(300);
-				}
-			} catch (Exception ignored) {
+	public void closeGeneratorWindow() {
+		try {
+			if (generator != null && generator.isGeneratorWindowVisible()) {
+				generator.clickCloseButton();
+				Thread.sleep(300);
 			}
-			try {
-				driver.quit();
-			} catch (Exception ignored) {
-			}
+		} catch (Exception ignored) {
 		}
 	}
 }

@@ -4,89 +4,69 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
+import de.thws.testing.pages.BasePage;
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.windows.WindowsDriver;
 
-public class PassphraseTabPage {
-
-	private WindowsDriver driver;
+public class PassphraseTabPage extends BasePage {
 
 	private By passphraseTabButton = MobileBy.name("Passphrase");
-
 	private By wordCountSpinBox = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.dicewareWidget.spinBoxWordCount");
-
 	private By wordSeparatorBox = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.dicewareWidget.editWordSeparator");
-
 	private By wordCaseComboBox = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.dicewareWidget.wordCaseComboBox");
-
 	private By wordListComboBox = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.dicewareWidget.comboBoxWordList");
-
 	private By addWordListButton = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.dicewareWidget.buttonAddWordList");
-
 	private By deleteWordListButton = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.dicewareWidget.buttonDeleteWordList");
 
 	public PassphraseTabPage(WindowsDriver driver) {
-		this.driver = driver;
+		super(driver);
+	}
+
+	private void clearAndType(By locator, String text) {
+		WebElement box = driver.findElement(locator);
+		box.click();
+		box.sendKeys(Keys.CONTROL + "a");
+		box.sendKeys(Keys.BACK_SPACE);
+		box.sendKeys(text);
 	}
 
 	public void clickPassphraseTab() {
-		driver.findElement(passphraseTabButton).click();
+		forceClick(driver.findElement(passphraseTabButton));
 	}
 
 	public void setWordCount(String count) {
-		WebElement countBox = driver.findElement(wordCountSpinBox);
-		countBox.click();
-		countBox.sendKeys(Keys.CONTROL + "a");
-		countBox.sendKeys(Keys.BACK_SPACE);
-		countBox.sendKeys(count);
+		clearAndType(wordCountSpinBox, count);
 	}
 
 	public void setWordSeparator(String separator) {
-		WebElement sepBox = driver.findElement(wordSeparatorBox);
-		sepBox.click();
-		sepBox.sendKeys(Keys.CONTROL + "a");
-		sepBox.sendKeys(Keys.BACK_SPACE);
-		sepBox.sendKeys(separator);
+		clearAndType(wordSeparatorBox, separator);
 	}
 
 	public void selectWordCase(String caseName) {
-		WebElement comboBox = driver.findElement(wordCaseComboBox);
-		comboBox.click();
-
-		try {
-			Thread.sleep(300);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		}
-
+		driver.findElement(wordCaseComboBox).click();
+		sleepMs(300);
 		driver.findElement(MobileBy.name(caseName)).click();
 	}
 
 	public boolean isAddWordListButtonDisplayed() {
-		return driver.findElement(addWordListButton).isDisplayed();
+		return !driver.findElements(addWordListButton).isEmpty();
 	}
 
 	public boolean isDeleteWordListButtonDisplayed() {
-		return driver.findElement(deleteWordListButton).isDisplayed();
+		return !driver.findElements(deleteWordListButton).isEmpty();
 	}
 
 	public void selectDifferentWordList() {
 		WebElement comboBox = driver.findElement(wordListComboBox);
 		comboBox.click();
-		try {
-			Thread.sleep(300);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		}
-
+		sleepMs(300);
 		comboBox.sendKeys(Keys.UP);
 		comboBox.sendKeys(Keys.ENTER);
 	}
-
 }

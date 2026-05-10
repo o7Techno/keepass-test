@@ -4,13 +4,13 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
+import de.thws.testing.pages.BasePage;
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.windows.WindowsDriver;
 
-public class AdvancedPanel {
+public class AdvancedPanel extends BasePage {
 
-	private WindowsDriver driver;
-
+	// --- LOCATORS ---
 	private By punctuationCheckbox = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.passwordWidget.groupBox.checkBoxPunctuation");
 	private By quotesCheckbox = MobileBy.AccessibilityId(
@@ -35,113 +35,87 @@ public class AdvancedPanel {
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.passwordWidget.groupBox.advancedContainer.checkBoxEnsureEvery");
 
 	public AdvancedPanel(WindowsDriver driver) {
-		this.driver = driver;
+		super(driver);
 	}
 
+	private void setCheckboxState(By locator, boolean targetState) {
+		WebElement cb = driver.findElement(locator);
+		if (cb.isSelected() != targetState) {
+			forceClick(cb); // BasePage'den güvenli tıklama
+		}
+	}
+
+	private void clearAndType(By locator, String text) {
+		WebElement box = driver.findElement(locator);
+		box.click();
+		box.sendKeys(Keys.CONTROL + "a");
+		box.sendKeys(Keys.BACK_SPACE);
+		box.sendKeys(text);
+	}
+
+	// --- ACTION METHODS ---
 	public void setExcludedCharacters(String chars) {
-		WebElement excludeBox = driver.findElement(editExcludedChars);
-		excludeBox.click();
-		excludeBox.sendKeys(Keys.CONTROL + "a");
-		excludeBox.sendKeys(Keys.BACK_SPACE);
-		excludeBox.sendKeys(chars);
+		clearAndType(editExcludedChars, chars);
+	}
+
+	public void setAdditionalCharacters(String chars) {
+		clearAndType(editAdditionalChars, chars);
 	}
 
 	public void enableExcludeLookAlike() {
-		WebElement cb = driver.findElement(excludeLookAlikeCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(excludeLookAlikeCheckbox, true);
 	}
 
 	public void disableExcludeLookAlike() {
-		WebElement cb = driver.findElement(excludeLookAlikeCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(excludeLookAlikeCheckbox, false);
 	}
 
 	public void enableEnsureEveryGroup() {
-		WebElement cb = driver.findElement(ensureEveryCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(ensureEveryCheckbox, true);
 	}
 
 	public void disableEnsureEveryGroup() {
-		WebElement cb = driver.findElement(ensureEveryCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(ensureEveryCheckbox, false);
 	}
 
 	public void enablePunctuation() {
-		WebElement cb = driver.findElement(punctuationCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(punctuationCheckbox, true);
 	}
 
 	public void disablePunctuation() {
-		WebElement cb = driver.findElement(punctuationCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(punctuationCheckbox, false);
 	}
 
 	public void enableQuotes() {
-		WebElement cb = driver.findElement(quotesCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(quotesCheckbox, true);
 	}
 
 	public void disableQuotes() {
-		WebElement cb = driver.findElement(quotesCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(quotesCheckbox, false);
 	}
 
 	public void enableDashes() {
-		WebElement cb = driver.findElement(dashesCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(dashesCheckbox, true);
 	}
 
 	public void disableDashes() {
-		WebElement cb = driver.findElement(dashesCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(dashesCheckbox, false);
 	}
 
 	public void enableMath() {
-		WebElement cb = driver.findElement(mathCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(mathCheckbox, true);
 	}
 
 	public void disableMath() {
-		WebElement cb = driver.findElement(mathCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(mathCheckbox, false);
 	}
 
 	public void enableBraces() {
-		WebElement cb = driver.findElement(bracesCheckbox);
-		if (!cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(bracesCheckbox, true);
 	}
 
 	public void disableBraces() {
-		WebElement cb = driver.findElement(bracesCheckbox);
-		if (cb.isSelected()) {
-			cb.click();
-		}
+		setCheckboxState(bracesCheckbox, false);
 	}
 
 	public void disableAllSpecialCharacters() {
@@ -160,15 +134,7 @@ public class AdvancedPanel {
 		enableBraces();
 	}
 
-	public void setAdditionalCharacters(String chars) {
-		WebElement addBox = driver.findElement(editAdditionalChars);
-		addBox.click();
-		addBox.sendKeys(Keys.CONTROL + "a");
-		addBox.sendKeys(Keys.BACK_SPACE);
-		addBox.sendKeys(chars);
-	}
-
 	public void clickHexButton() {
-		driver.findElement(hexButton).click();
+		forceClick(driver.findElement(hexButton));
 	}
 }

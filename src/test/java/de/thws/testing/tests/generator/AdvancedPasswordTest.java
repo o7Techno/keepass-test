@@ -6,42 +6,51 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 
-import de.thws.testing.pages.HomePage;
 import de.thws.testing.pages.generator.AdvancedPanel;
 import de.thws.testing.pages.generator.GeneratorCommonPage;
 import de.thws.testing.pages.generator.PasswordTabPage;
+import de.thws.testing.pages.main.MainWindowPage;
+import de.thws.testing.pages.unlock.UnlockPage;
+import de.thws.testing.support.SuiteDatabaseSupport;
+import de.thws.testing.tests.BaseTest;
 import de.thws.testing.utils.DriverFactory;
-import io.appium.java_client.windows.WindowsDriver;
 
-@EnabledOnOs(OS.WINDOWS)
-public class AdvancedPasswordTest {
+public class AdvancedPasswordTest extends BaseTest {
 
-	private WindowsDriver driver;
-	private HomePage homePage;
+	private MainWindowPage homePage;
 	private GeneratorCommonPage commonPage;
 	private PasswordTabPage passwordTab;
 	private AdvancedPanel advancedPanel;
 
 	@BeforeEach
-	public void setUp() throws InterruptedException {
-		driver = DriverFactory.createKeePassDriver();
-		homePage = new HomePage(driver);
+	public void setUp() throws Exception {
+		String dbPath = SuiteDatabaseSupport.suiteDatabasePath().toAbsolutePath().toString();
+		driver = DriverFactory.createKeePassDriverOpeningDatabase(dbPath);
+		Thread.sleep(1500);
+
+		UnlockPage unlockPage = new UnlockPage(driver);
+		unlockPage.enterMasterPassword(SuiteDatabaseSupport.suiteMasterPassword());
+		unlockPage.clickUnlockButton();
+		Thread.sleep(1500);
+
+		homePage = new MainWindowPage(driver);
 		commonPage = new GeneratorCommonPage(driver);
 		passwordTab = new PasswordTabPage(driver);
 		advancedPanel = new AdvancedPanel(driver);
 
 		homePage.openPasswordGenerator();
-		Thread.sleep(1000);
+		Thread.sleep(800);
+
+		passwordTab.ensurePasswordTabOpen();
+		Thread.sleep(400);
 
 		resetToDefaultState();
 	}
 
 	private void resetToDefaultState() throws InterruptedException {
 		passwordTab.ensureAdvancedModeOpen();
-		Thread.sleep(500);
+		Thread.sleep(400);
 
 		passwordTab.enableUppercase();
 		passwordTab.enableLowercase();
@@ -56,7 +65,7 @@ public class AdvancedPasswordTest {
 		advancedPanel.disableExcludeLookAlike();
 		advancedPanel.disableEnsureEveryGroup();
 		advancedPanel.disableAllSpecialCharacters();
-		Thread.sleep(500);
+		Thread.sleep(400);
 	}
 
 	@Test
@@ -70,7 +79,8 @@ public class AdvancedPasswordTest {
 		String newPassword = commonPage.getGeneratedPassword();
 
 		boolean isHex = newPassword.matches("^[a-fA-F0-9]+$");
-		assertTrue(isHex, newPassword);
+		assertTrue(isHex, "ERROR: Password is not a valid Hex string! Password: " + newPassword);
+		System.out.println("Test 1 Passed: Hex password format verified.");
 	}
 
 	@Test
@@ -85,7 +95,8 @@ public class AdvancedPasswordTest {
 		String newPassword = commonPage.getGeneratedPassword();
 		boolean containsRestricted = newPassword.matches(".*[AAA123].*");
 
-		assertFalse(containsRestricted, newPassword);
+		assertFalse(containsRestricted, "ERROR: Password contains restricted characters! Password: " + newPassword);
+		System.out.println("Test 2 Passed: Restricted characters were successfully excluded.");
 	}
 
 	@Test
@@ -97,10 +108,10 @@ public class AdvancedPasswordTest {
 		Thread.sleep(500);
 
 		String newPassword = commonPage.getGeneratedPassword();
-
 		boolean containsLookAlike = newPassword.matches(".*[O0lI1].*");
 
-		assertFalse(containsLookAlike, newPassword);
+		assertFalse(containsLookAlike, "ERROR: Password contains look-alike characters! Password: " + newPassword);
+		System.out.println("Test 3 Passed: Look-alike characters were successfully excluded.");
 	}
 
 	@Test
@@ -111,15 +122,18 @@ public class AdvancedPasswordTest {
 		String newPassword = commonPage.getGeneratedPassword();
 
 		boolean isAlphanumericOnly = newPassword.matches("^[A-Za-z0-9]+$");
-		assertTrue(isAlphanumericOnly, newPassword);
+		assertTrue(isAlphanumericOnly, "ERROR: Password still contains special characters! Password: " + newPassword);
+		System.out.println("Test 4 Passed: All special character groups were disabled.");
 	}
 
 	@Test
 	public void test5_IncludeAdditionalCharacters() throws InterruptedException {
-		passwordTab.setPasswordLength("50");
+		passwordTab.disableUppercase();
+		passwordTab.disableLowercase();
+		passwordTab.disableNumbers();
 		Thread.sleep(500);
 
-		String customChar = "\u20ac";
+		String customChar = "€";
 		advancedPanel.setAdditionalCharacters(customChar);
 		Thread.sleep(500);
 
@@ -128,7 +142,12 @@ public class AdvancedPasswordTest {
 
 		String newPassword = commonPage.getGeneratedPassword();
 
-		assertTrue(newPassword.contains(customChar));
+		assertTrue(newPassword.contains(customChar), "ERROR: The additional character was not included!");
+
+		boolean isOnlyCustomChar = newPassword.matches("^[" + customChar + "]+$");
+		assertTrue(isOnlyCustomChar, "ERROR: Password contains unexpected characters! Password: " + newPassword);
+
+		System.out.println("Test 5 Passed: Additional custom character inclusion verified deterministically.");
 	}
 
 	@Test
@@ -144,7 +163,9 @@ public class AdvancedPasswordTest {
 
 		boolean containsExtendedASCII = !newPassword.matches("^[\\x00-\\x7F]+$");
 
-		assertTrue(containsExtendedASCII, newPassword);
+		assertTrue(containsExtendedASCII,
+				"ERROR: Password does not seem to contain Extended ASCII characters! Password: " + newPassword);
+		System.out.println("Test 6 Passed: Extended ASCII characters are present.");
 	}
 
 	@Test
@@ -161,7 +182,9 @@ public class AdvancedPasswordTest {
 		boolean hasLower = newPassword.matches(".*[a-z].*");
 		boolean hasNumber = newPassword.matches(".*[0-9].*");
 
-		assertTrue(hasUpper && hasLower && hasNumber, newPassword);
+		assertTrue(hasUpper && hasLower && hasNumber,
+				"ERROR: Password did not pick from every selected group! Password: " + newPassword);
+		System.out.println("Test 7 Passed: 'Ensure every group' functionality verified.");
 	}
 
 	@Test
@@ -180,20 +203,18 @@ public class AdvancedPasswordTest {
 		String newPassword = commonPage.getGeneratedPassword();
 
 		boolean isOnlyBraces = newPassword.matches("^[\\{\\}\\[\\]\\(\\)<>]+$");
-		assertTrue(isOnlyBraces, newPassword);
+		assertTrue(isOnlyBraces, "ERROR: Password contains characters other than Braces! Password: " + newPassword);
+		System.out.println("Test 8 Passed: Password successfully generated using ONLY Braces.");
 	}
 
 	@AfterEach
-	public void tearDown() {
-		if (driver != null) {
-			try {
-				if (commonPage.isGeneratorWindowVisible()) {
-					commonPage.clickCloseButton();
-					Thread.sleep(500);
-				}
-			} catch (Exception ignored) {
+	public void closeGeneratorWindow() {
+		try {
+			if (commonPage != null && commonPage.isGeneratorWindowVisible()) {
+				commonPage.clickCloseButton();
+				Thread.sleep(500);
 			}
-			driver.quit();
+		} catch (Exception ignored) {
 		}
 	}
 }

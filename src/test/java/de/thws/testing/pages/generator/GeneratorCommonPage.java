@@ -6,13 +6,13 @@ import java.awt.datatransfer.DataFlavor;
 
 import org.openqa.selenium.By;
 
+import de.thws.testing.pages.BasePage;
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.windows.WindowsDriver;
 
-public class GeneratorCommonPage {
+public class GeneratorCommonPage extends BasePage {
 
-	private WindowsDriver driver;
-
+	// --- LOCATORS ---
 	private By generateButton = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.buttonGenerate");
 	private By passwordField = MobileBy.AccessibilityId(
@@ -23,19 +23,19 @@ public class GeneratorCommonPage {
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.buttonClose");
 
 	public GeneratorCommonPage(WindowsDriver driver) {
-		this.driver = driver;
+		super(driver);
 	}
 
 	public void clickGenerateButton() {
-		driver.findElement(generateButton).click();
+		forceClick(driver.findElement(generateButton));
 	}
 
 	public void clickCopyButton() {
-		driver.findElement(copyButton).click();
+		forceClick(driver.findElement(copyButton));
 	}
 
 	public void clickCloseButton() {
-		driver.findElement(closeButton).click();
+		forceClick(driver.findElement(closeButton));
 	}
 
 	public String getGeneratedPassword() {

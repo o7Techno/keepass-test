@@ -1,24 +1,22 @@
 package de.thws.testing.pages.welcome;
 
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.By;
 
-import de.thws.testing.config.KeePassAccessibility;
+import de.thws.testing.pages.BasePage;
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.windows.WindowsDriver;
 
-public class WelcomePage {
+public class WelcomePage extends BasePage {
 
-	private final WindowsDriver driver;
+	private By createDatabaseButton = MobileBy
+			.AccessibilityId("MainWindow.centralwidget.stackedWidget.pageWelcome.welcomeWidget.buttonNewDatabase");
 
 	public WelcomePage(WindowsDriver driver) {
-		this.driver = driver;
+		super(driver);
 	}
 
 	public void clickCreateDatabase() {
-		WebDriverWait wait = new WebDriverWait(driver, 15);
-		wait.until(ExpectedConditions
-				.elementToBeClickable(MobileBy.AccessibilityId(KeePassAccessibility.WELCOME_CREATE_DATABASE)))
-				.click();
+
+		forceClick(driver.findElement(createDatabaseButton));
 	}
 }
