@@ -62,7 +62,7 @@ public class PassphraseTabPage {
 		try {
 			Thread.sleep(300);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Thread.currentThread().interrupt();
 		}
 
 		driver.findElement(MobileBy.name(caseName)).click();
@@ -82,7 +82,7 @@ public class PassphraseTabPage {
 		try {
 			Thread.sleep(300);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Thread.currentThread().interrupt();
 		}
 
 		comboBox.sendKeys(Keys.UP);

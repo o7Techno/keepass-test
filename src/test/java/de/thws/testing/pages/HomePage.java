@@ -16,10 +16,7 @@ public class HomePage {
 		this.driver = driver;
 	}
 
-	// Opens the password generator with Smart Wait (Explicit Wait)
 	public void openPasswordGenerator() {
-		// Wait up to 5 seconds for the dice icon to become clickable (solves app
-		// loading/login screen delays)
 		WebDriverWait wait = new WebDriverWait(driver, 5);
 		WebElement diceButton = wait.until(ExpectedConditions.elementToBeClickable(diceIcon));
 		diceButton.click();

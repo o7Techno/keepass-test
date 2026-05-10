@@ -11,8 +11,6 @@ public class AdvancedPanel {
 
 	private WindowsDriver driver;
 
-	// --- Locators strictly for the Advanced Panel ---
-
 	private By punctuationCheckbox = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.passwordWidget.groupBox.checkBoxPunctuation");
 	private By quotesCheckbox = MobileBy.AccessibilityId(
@@ -39,8 +37,6 @@ public class AdvancedPanel {
 	public AdvancedPanel(WindowsDriver driver) {
 		this.driver = driver;
 	}
-
-	// --- Action Methods (Smart Toggles) ---
 
 	public void setExcludedCharacters(String chars) {
 		WebElement excludeBox = driver.findElement(editExcludedChars);
@@ -77,8 +73,6 @@ public class AdvancedPanel {
 			cb.click();
 		}
 	}
-
-	// --- Individual Special Character Group Toggles ---
 
 	public void enablePunctuation() {
 		WebElement cb = driver.findElement(punctuationCheckbox);
@@ -149,8 +143,6 @@ public class AdvancedPanel {
 			cb.click();
 		}
 	}
-
-	// --- Bulk / Specific Actions ---
 
 	public void disableAllSpecialCharacters() {
 		disablePunctuation();

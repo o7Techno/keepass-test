@@ -13,7 +13,6 @@ public class GeneratorCommonPage {
 
 	private WindowsDriver driver;
 
-	// Locators for common elements across all generator tabs
 	private By generateButton = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.buttonGenerate");
 	private By passwordField = MobileBy.AccessibilityId(
@@ -27,7 +26,6 @@ public class GeneratorCommonPage {
 		this.driver = driver;
 	}
 
-	// Clicks the refresh/generate button
 	public void clickGenerateButton() {
 		driver.findElement(generateButton).click();
 	}
@@ -40,7 +38,6 @@ public class GeneratorCommonPage {
 		driver.findElement(closeButton).click();
 	}
 
-	// Reads and returns the currently generated password
 	public String getGeneratedPassword() {
 		return driver.findElement(passwordField).getText();
 	}
@@ -50,7 +47,7 @@ public class GeneratorCommonPage {
 			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 			return (String) clipboard.getData(DataFlavor.stringFlavor);
 		} catch (Exception e) {
-			throw new RuntimeException("ERROR: Could not read from system clipboard! " + e.getMessage());
+			throw new RuntimeException("clipboard: " + e.getMessage(), e);
 		}
 	}
 
