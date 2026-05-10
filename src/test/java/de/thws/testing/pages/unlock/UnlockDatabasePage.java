@@ -12,9 +12,6 @@ import de.thws.testing.utils.SecureFieldInput;
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.windows.WindowsDriver;
 
-/**
- * Окно разблокировки уже существующей БД (мастер-пароль + Unlock).
- */
 public class UnlockDatabasePage {
 
 	private final WindowsDriver driver;
@@ -23,11 +20,6 @@ public class UnlockDatabasePage {
 		this.driver = driver;
 	}
 
-	/**
-	 * Если видно поле пароля разблокировки — вводит пароль и подтверждает
-	 * <kbd>Enter</kbd> (как в KeePassXC по умолчанию). При необходимости — запасной
-	 * клик по кнопке Unlock по AutomationId / имени.
-	 */
 	public void unlockIfNeeded(String masterPassword) throws InterruptedException {
 		WebDriverWait shortWait = new WebDriverWait(driver, 12);
 		WebElement pwdField;
@@ -48,7 +40,6 @@ public class UnlockDatabasePage {
 		pwdField.sendKeys(Keys.ENTER);
 		Thread.sleep(1000);
 
-		// Если Enter не сработал (редко), пробуем кнопку
 		if (isUnlockPasswordFieldStillPresent()) {
 			tryClickUnlockButton();
 			Thread.sleep(1000);
@@ -71,16 +62,15 @@ public class UnlockDatabasePage {
 					MobileBy.AccessibilityId(KeePassAccessibility.UNLOCK_DATABASE_BUTTON_UNLOCK))).click();
 			return;
 		} catch (TimeoutException ignored) {
-			// next
 		}
 		try {
 			new WebDriverWait(driver, 3).until(ExpectedConditions.elementToBeClickable(By.name("Unlock"))).click();
 		} catch (TimeoutException ignored) {
 			try {
-				new WebDriverWait(driver, 3).until(ExpectedConditions.elementToBeClickable(By.name("Разблокировать")))
+				new WebDriverWait(driver, 3).until(ExpectedConditions
+						.elementToBeClickable(By.name("\u0420\u0430\u0437\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u0442\u044c")))
 						.click();
 			} catch (TimeoutException ignored2) {
-				// окно уже закрылось или другой UI
 			}
 		}
 	}

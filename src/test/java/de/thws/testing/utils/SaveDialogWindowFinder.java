@@ -6,17 +6,11 @@ import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinUser;
 
-/**
- * Finds the native Win32 “Save as” shell dialog ({@code #32770}) so WinAppDriver
- * can attach via {@code appTopLevelWindow} — invisible from the KeePassXC app
- * session when the host runs comdlg in another process.
- */
 public final class SaveDialogWindowFinder {
 
 	private SaveDialogWindowFinder() {
 	}
 
-	/** Format expected by WinAppDriver {@code appTopLevelWindow}. */
 	public static String hwndToHex(HWND hwnd) {
 		long v = Pointer.nativeValue(hwnd.getPointer());
 		return String.format("0x%X", v);
@@ -26,8 +20,7 @@ public final class SaveDialogWindowFinder {
 		long deadline = System.currentTimeMillis() + timeoutMs;
 		while (System.currentTimeMillis() < deadline) {
 			HWND fg = User32.INSTANCE.GetForegroundWindow();
-			// После появления «Сохранить как» активное верхнее окно часто #32770 (comdlg).
-			if (isVisibleLegacyDialog(fg)) {
+			if (isSaveShellDialog(fg)) {
 				return fg;
 			}
 			HWND found = findVisibleSave32770();
@@ -39,7 +32,42 @@ public final class SaveDialogWindowFinder {
 		return null;
 	}
 
-	/** Видимое окно класса {@code #32770} (без проверки заголовка). */
+	public static HWND waitForSaveDialogHwndAndActivate(long timeoutMs) throws InterruptedException {
+		HWND hwnd = waitForSaveDialogHwnd(timeoutMs);
+		if (hwnd == null) {
+			return null;
+		}
+		User32.INSTANCE.ShowWindow(hwnd, WinUser.SW_RESTORE);
+		for (int i = 0; i < 8; i++) {
+			User32.INSTANCE.SetForegroundWindow(hwnd);
+			Thread.sleep(120);
+			HWND fg = User32.INSTANCE.GetForegroundWindow();
+			if (fg != null && Pointer.nativeValue(fg.getPointer()) == Pointer.nativeValue(hwnd.getPointer())) {
+				break;
+			}
+		}
+		Thread.sleep(200);
+		return hwnd;
+	}
+
+	public static boolean isSaveShellDialogVisibleNow() {
+		HWND fg = User32.INSTANCE.GetForegroundWindow();
+		if (isSaveShellDialog(fg)) {
+			return true;
+		}
+		return findVisibleSave32770() != null;
+	}
+
+	public static boolean isWindowStillSaveShellDialog(HWND hwnd) {
+		if (hwnd == null || Pointer.nativeValue(hwnd.getPointer()) == 0) {
+			return false;
+		}
+		if (!User32.INSTANCE.IsWindow(hwnd)) {
+			return false;
+		}
+		return isSaveShellDialog(hwnd);
+	}
+
 	private static boolean isVisibleLegacyDialog(HWND hwnd) {
 		if (hwnd == null || Pointer.nativeValue(hwnd.getPointer()) == 0) {
 			return false;
@@ -94,7 +122,8 @@ public final class SaveDialogWindowFinder {
 			return false;
 		}
 		String lower = title.toLowerCase();
-		return title.contains("Сохранить") || title.contains("базу данных") || lower.contains("save")
-				|| lower.contains("database");
+		return title.contains("\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c")
+				|| title.contains("\u0431\u0430\u0437\u0443 \u0434\u0430\u043d\u043d\u044b\u0445")
+				|| lower.contains("save") || lower.contains("database");
 	}
 }

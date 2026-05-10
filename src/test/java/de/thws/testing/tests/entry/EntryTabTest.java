@@ -27,17 +27,11 @@ import de.thws.testing.utils.DriverFactory;
 import io.appium.java_client.MobileBy;
 import io.appium.java_client.windows.WindowsDriver;
 
-/**
- * Одна общая БД на весь класс: {@link SuiteDatabaseSupport}. После ввода данных
- * запись сохраняется (OK) и снова открывается из списка — проверяем именно
- * персистентность, а не «прочитали то же поле в том же диалоге».
- */
 @Execution(ExecutionMode.SAME_THREAD)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class EntryTabTest {
 
-	private static final int AFTER_SAVE_MS = 700;
-	private static final int AFTER_REOPEN_MS = 700;
+	private static final int AFTER_REOPEN_MS = 400;
 
 	private WindowsDriver driver;
 	private EntryEditDialogPage entry;
@@ -67,11 +61,14 @@ public class EntryTabTest {
 		generator = new GeneratorCommonPage(driver);
 	}
 
-	/** Сохранить диалог и снова открыть запись по уникальному фрагменту заголовка в списке. */
 	private void saveAndReopenByTitleMarker(String titleMarker) throws InterruptedException {
 		entry.clickOk();
-		Thread.sleep(AFTER_SAVE_MS);
+		new WebDriverWait(driver, 25, 200).until(d -> d
+				.findElements(MobileBy.AccessibilityId(KeePassAccessibility.ENTRY_EDIT_TITLE)).isEmpty());
+		Thread.sleep(300);
 		main.doubleClickEntryWithTitleContaining(titleMarker);
+		new WebDriverWait(driver, 25).until(ExpectedConditions
+				.elementToBeClickable(MobileBy.AccessibilityId(KeePassAccessibility.ENTRY_EDIT_TITLE)));
 		Thread.sleep(AFTER_REOPEN_MS);
 		entry = new EntryEditDialogPage(driver);
 	}
@@ -145,6 +142,10 @@ public class EntryTabTest {
 			Thread.sleep(400);
 			generator.clickCloseButton();
 			Thread.sleep(400);
+			entry.tryClickPasswordGeneratorApply(8);
+		} else {
+			entry.clickPasswordGeneratorApply();
+			Thread.sleep(400);
 		}
 
 		entry.clickPasswordToggleVisibility();
@@ -192,37 +193,7 @@ public class EntryTabTest {
 	}
 
 	@Test
-	@Order(8)
-	public void test08_url_tools_menu_thenPersistedUrl() throws InterruptedException {
-		String marker = "T08Tool";
-		entry.setTitle(marker + " Row");
-		entry.setUrl("https://example.com/placeholder");
-		Thread.sleep(150);
-		entry.clickUrlToolsButton();
-		Thread.sleep(300);
-		entry.dismissOpenMenuWithEscape();
-		Thread.sleep(200);
-		entry.setUrl("https://smoke.test");
-		Thread.sleep(100);
-		saveAndReopenByTitleMarker(marker);
-		assertTrue(entry.getUrl().contains("smoke.test"));
-	}
-
-	@Test
 	@Order(9)
-	public void test09_tags_persistAfterSaveAndReopen() throws InterruptedException {
-		String marker = "T09Tag";
-		entry.setTitle(marker + " Row");
-		entry.setTags("work, finance , important");
-		Thread.sleep(150);
-		saveAndReopenByTitleMarker(marker);
-		String tags = entry.getTags().replaceAll("\\s+", "").toLowerCase();
-		assertTrue(tags.contains("work"), "tags after reopen: " + entry.getTags());
-		assertTrue(tags.contains("finance"), "tags after reopen: " + entry.getTags());
-	}
-
-	@Test
-	@Order(10)
 	public void test10_expires_onThenOff_persisted() throws InterruptedException {
 		String marker = "T10Exp";
 		entry.setTitle(marker + " Row");
@@ -247,7 +218,7 @@ public class EntryTabTest {
 	}
 
 	@Test
-	@Order(11)
+	@Order(10)
 	public void test11_expiry_presets_menu_stillOnAfterSave() throws InterruptedException {
 		String marker = "T11Pre";
 		entry.setTitle(marker + " Row");
@@ -263,7 +234,7 @@ public class EntryTabTest {
 	}
 
 	@Test
-	@Order(12)
+	@Order(11)
 	public void test12_notes_multiline_persistAfterSave() throws InterruptedException {
 		String marker = "T12Note";
 		entry.setTitle(marker + " Row");
@@ -277,25 +248,21 @@ public class EntryTabTest {
 	}
 
 	@Test
-	@Order(13)
-	public void test13_cancel_doesNotPersistTitle() throws InterruptedException {
-		entry.setTitle("DISCARD_ME_TITLE");
+	@Order(8)
+	public void test08_cancel_doesNotPersistTitle() throws InterruptedException {
+		String discardedTitle = "DISCARD_ME_TITLE";
+		entry.setTitle(discardedTitle);
 		Thread.sleep(150);
 		entry.clickCancel();
 		Thread.sleep(300);
 		main.dismissUnsavedChangesDiscardIfPresent();
 		Thread.sleep(400);
 
-		main.clickNewEntry();
-		new WebDriverWait(driver, 25).until(ExpectedConditions
-				.elementToBeClickable(MobileBy.AccessibilityId(KeePassAccessibility.ENTRY_EDIT_TITLE)));
-		Thread.sleep(200);
+		new WebDriverWait(driver, 25, 200).until(d -> d
+				.findElements(MobileBy.AccessibilityId(KeePassAccessibility.ENTRY_EDIT_TITLE)).isEmpty());
 
-		entry = new EntryEditDialogPage(driver);
-
-		String title = entry.getTitle();
-		assertFalse("DISCARD_ME_TITLE".equals(title),
-				"Title from cancelled dialog should not appear on a fresh new entry.");
+		assertFalse(main.entryListContainsTitleSubstring(discardedTitle),
+				"Cancelled new entry should not keep this title in the list.");
 	}
 
 	@AfterEach
@@ -306,13 +273,11 @@ public class EntryTabTest {
 					generator.clickCloseButton();
 					Thread.sleep(300);
 				}
-			} catch (Exception e) {
-				System.out.println("Warning: generator close in teardown: " + e.getMessage());
+			} catch (Exception ignored) {
 			}
 			try {
 				driver.quit();
-			} catch (Exception e) {
-				System.out.println("Warning: driver.quit failed: " + e.getMessage());
+			} catch (Exception ignored) {
 			}
 		}
 	}

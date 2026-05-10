@@ -24,7 +24,6 @@ public class PasswordTabPage {
 	private By lengthSpinBox = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.passwordWidget.spinBoxLength");
 
-	// Button to open the Advanced Component
 	private By advancedModeButton = MobileBy.AccessibilityId(
 			"MainWindow.centralwidget.stackedWidget.pagePasswordGenerator.passwordGeneratorWidget.tabWidget.qt_tabwidget_stackedwidget.passwordWidget.buttonAdvancedMode");
 
@@ -113,7 +112,6 @@ public class PasswordTabPage {
 		lengthBox.sendKeys(length);
 	}
 
-	// SMART TOGGLE: Opens the Advanced Panel component safely
 	public void ensureAdvancedModeOpen() {
 		try {
 			boolean isAdvancedVisible = driver.findElement(editExcludedChars).isDisplayed();

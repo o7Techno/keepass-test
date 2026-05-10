@@ -47,12 +47,10 @@ public class NewDatabaseWizardPage {
 		waitClickable(KeePassAccessibility.WIZARD_BUTTON_DONE).click();
 	}
 
-	/**
-	 * После «Готово» KeePassXC может показать предупреждение «Слабый пароль». Если
-	 * окно есть — нажимаем продолжить со слабым паролём (RU/EN).
-	 */
 	public void dismissWeakMasterPasswordWarningIfPresent() throws InterruptedException {
-		String[] buttonNames = { "Продолжить со слабым паролем", "Continue with weak password" };
+		String[] buttonNames = {
+				"\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u044c \u0441\u043e \u0441\u043b\u0430\u0431\u044b\u043c \u043f\u0430\u0440\u043e\u043b\u0435\u043c",
+				"Continue with weak password" };
 		long deadline = System.currentTimeMillis() + 10_000;
 		while (System.currentTimeMillis() < deadline) {
 			for (String n : buttonNames) {
@@ -63,19 +61,10 @@ public class NewDatabaseWizardPage {
 						return;
 					}
 				} catch (Exception ignored) {
-					// next label
 				}
 			}
 			Thread.sleep(200);
 		}
-	}
-
-	private void setTextField(String automationId, String value) {
-		WebElement field = waitClickable(automationId);
-		field.click();
-		field.sendKeys(Keys.CONTROL + "a");
-		field.sendKeys(Keys.BACK_SPACE);
-		field.sendKeys(value);
 	}
 
 	private WebElement waitClickable(String automationId) {

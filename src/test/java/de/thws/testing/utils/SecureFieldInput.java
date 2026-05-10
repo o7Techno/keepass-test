@@ -6,10 +6,6 @@ import java.awt.datatransfer.StringSelection;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
-/**
- * Ввод пароля через буфер обмена и Ctrl+V — надёжнее, чем {@link WebElement#sendKeys(CharSequence...)}
- * под WinAppDriver при неанглийской раскладке (символы {@code # $ @ &} и т.д.).
- */
 public final class SecureFieldInput {
 
 	private SecureFieldInput() {

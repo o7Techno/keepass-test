@@ -7,21 +7,6 @@ import de.thws.testing.flow.DatabaseCreationFlow;
 import de.thws.testing.utils.DriverFactory;
 import io.appium.java_client.windows.WindowsDriver;
 
-/**
- * Одна общая БД для класса тестов. Файл лежит <strong>не в корне профиля</strong>,
- * чтобы не пересекаться с вашим личным {@code Passwords.kdbx} и дефолтом мастера
- * KeePassXC.
- *
- * <p>
- * По умолчанию:
- * {@code %USERPROFILE%\.keepass-junit-suite\suite.kdbx}
- * </p>
- *
- * <ul>
- * <li>{@code -Dkeepass.suite.database=C:\\path\\custom.kdbx}</li>
- * <li>{@code -Dkeepass.suite.master=...}</li>
- * </ul>
- */
 public final class SuiteDatabaseSupport {
 
 	private static final String SUITE_DIR = ".keepass-junit-suite";
@@ -42,6 +27,14 @@ public final class SuiteDatabaseSupport {
 		}
 		return Path.of(System.getProperty("user.home")).resolve(SUITE_DIR).resolve(SUITE_FILENAME).toAbsolutePath()
 				.normalize();
+	}
+
+	public static String suiteDatabasePathForSaveDialog() {
+		String override = System.getProperty(PROP_DB);
+		if (override != null && !override.isBlank()) {
+			return Path.of(override).toAbsolutePath().normalize().toString();
+		}
+		return "%USERPROFILE%\\" + SUITE_DIR + "\\" + SUITE_FILENAME;
 	}
 
 	public static String suiteMasterPassword() {
@@ -70,19 +63,18 @@ public final class SuiteDatabaseSupport {
 			@SuppressWarnings("rawtypes")
 			WindowsDriver driver = DriverFactory.createKeePassDriverWithoutDatabaseFile();
 			try {
-				DatabaseCreationFlow.createDatabaseFileOnly(driver, db.toAbsolutePath().toString(),
+				DatabaseCreationFlow.createDatabaseFileOnly(driver, suiteDatabasePathForSaveDialog(),
 						suiteMasterPassword(), "SuiteDb");
 			} finally {
 				try {
 					driver.quit();
-				} catch (Exception e) {
-					System.err.println("Warning: quit after suite DB create: " + e.getMessage());
+				} catch (Exception ignored) {
 				}
 			}
 
 			if (!Files.exists(db)) {
-				throw new IllegalStateException("Suite database missing at " + db + ". Check Save dialog: paste must "
-						+ "use full path (folder " + parent + "). Your Passwords.kdbx in profile is not renamed anymore.");
+				throw new IllegalStateException("Suite database missing at " + db
+						+ ". Check Save-as path from suiteDatabasePathForSaveDialog() and %USERPROFILE% expansion.");
 			}
 		}
 	}

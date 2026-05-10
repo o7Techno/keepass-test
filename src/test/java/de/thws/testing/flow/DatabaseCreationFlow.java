@@ -6,16 +6,11 @@ import de.thws.testing.pages.welcome.WelcomePage;
 import de.thws.testing.pages.wizard.NewDatabaseWizardPage;
 import io.appium.java_client.windows.WindowsDriver;
 
-/**
- * Welcome → create database → encryption step (defaults) → master password →
- * save dialog → main window → new entry dialog.
- */
 public final class DatabaseCreationFlow {
 
 	private DatabaseCreationFlow() {
 	}
 
-	/** Только мастер + сохранение файла (без «новая запись»). Для {@code @BeforeAll}. */
 	public static void createDatabaseFileOnly(WindowsDriver driver, String databasePath, String masterPassword,
 			String databaseDisplayName) throws InterruptedException {
 		WelcomePage welcome = new WelcomePage(driver);

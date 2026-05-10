@@ -20,15 +20,15 @@ import io.appium.java_client.windows.WindowsDriver;
 
 public class MainWindowPage {
 
-	/**
-	 * Точные подписи из Accessibility Insights (EN/RU). У Qt-кнопки часто нет
-	 * AutomationId, зато есть Name и ClassName {@code QToolButton}.
-	 */
-	private static final String[] NEW_ENTRY_EXACT_NAMES = { "New Entry...", "New Entry…", "Создать запись...",
-			"Создать запись…", };
+	private static final String[] NEW_ENTRY_EXACT_NAMES = { "New Entry...", "New Entry\u2026",
+			"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u044c...",
+			"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u044c\u2026", };
 
-	private static final String[] NEW_ENTRY_TOOLBAR_NAMES = { "New Entry...", "New Entry…", "Создать запись…",
-			"Создать запись...", "Add new entry", "New Entry", "Новая запись", "Добавить запись" };
+	private static final String[] NEW_ENTRY_TOOLBAR_NAMES = { "New Entry...", "New Entry\u2026",
+			"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u044c\u2026",
+			"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u044c...", "Add new entry",
+			"New Entry", "\u041d\u043e\u0432\u0430\u044f \u0437\u0430\u043f\u0438\u0441\u044c",
+			"\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u044c" };
 
 	private static final long IMPLICIT_RESTORE_SEC = 5;
 
@@ -38,21 +38,13 @@ public class MainWindowPage {
 		this.driver = driver;
 	}
 
-	/**
-	 * Одна попытка поиска (несколько локаторов подряд — это не «ретраи ожидания»:
-	 * дерево уже есть, ищем тем способом, которым WinAppDriver реально видит Qt).
-	 * <p>
-	 * Важно: в WinAppDriver узлы {@code QToolButton} нередко не матчятся на
-	 * {@code //Button}, поэтому есть XPath по {@code @ClassName='QToolButton'}.
-	 */
 	public void clickNewEntry() {
 		driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
 		try {
 			WebElement btn = findNewEntryToolbarButtonOnce(driver);
 			if (btn == null) {
 				throw new NoSuchElementException(
-						"Кнопка «New Entry» не найдена под AutomationId=" + KeePassAccessibility.MAIN_TOOL_BAR
-								+ ". Ожидаются Name вроде «New Entry...» и ClassName=QToolButton (см. Accessibility Insights).");
+						"New Entry toolbar button not found under AutomationId=" + KeePassAccessibility.MAIN_TOOL_BAR);
 			}
 			invokeQtToolBarButton(btn);
 		} finally {
@@ -152,7 +144,8 @@ public class MainWindowPage {
 			}
 		}
 		String lower = n.toLowerCase();
-		if (lower.contains("создать") && lower.contains("запись")) {
+		if (lower.contains("\u0441\u043e\u0437\u0434\u0430\u0442\u044c")
+				&& lower.contains("\u0437\u0430\u043f\u0438\u0441\u044c")) {
 			return true;
 		}
 		if (lower.contains("add new") && lower.contains("entry")) {
@@ -161,7 +154,8 @@ public class MainWindowPage {
 		if ("new entry".equals(lower)) {
 			return true;
 		}
-		return lower.contains("новая запись") || lower.contains("добавить запись");
+		return lower.contains("\u043d\u043e\u0432\u0430\u044f \u0437\u0430\u043f\u0438\u0441\u044c")
+				|| lower.contains("\u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u044c");
 	}
 
 	private String readAccessibleName(WebElement el) {
@@ -219,19 +213,12 @@ public class MainWindowPage {
 		WebDriverWait wait = new WebDriverWait(driver, 15);
 		WebElement list = wait.until(ExpectedConditions
 				.visibilityOfElementLocated(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW)));
-		List<WebElement> rows = list.findElements(By.xpath(".//ListItem | .//DataItem | .//TreeItem"));
+		List<WebElement> rows = list
+				.findElements(By.xpath(".//ListItem | .//DataItem | .//TreeItem | .//ListBoxItem"));
 		WebElement target = rows.isEmpty() ? list : rows.get(0);
 		new Actions(driver).doubleClick(target).perform();
 	}
 
-	/**
-	 * Двойной клик по строке записи в списке, у которой в {@code Name} (или legacy
-	 * имени) есть подстрока — надёжнее {@link #doubleClickFirstEntry()}, когда в БД
-	 * уже несколько записей.
-	 * <p>
-	 * В KeePassXC заголовок часто висит на дочернем узле, а не на {@code ListItem} —
-	 * ищем любой потомок {@code entryView} с текстом и поднимаемся к строке.
-	 */
 	public void doubleClickEntryWithTitleContaining(String titleSubstring) {
 		driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
 		try {
@@ -242,20 +229,25 @@ public class MainWindowPage {
 				WebElement list = d.findElement(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW));
 				return findEntryRowContaining(list, titleSubstring);
 			});
-			new Actions(driver).doubleClick(row).perform();
+			new Actions(driver).moveToElement(row).pause(80).doubleClick().perform();
 		} catch (TimeoutException e) {
+			try {
+				WebElement list = driver.findElement(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW));
+				List<WebElement> rows = list.findElements(
+						By.xpath(".//ListItem | .//DataItem | .//TreeItem | .//ListBoxItem"));
+				if (rows.size() == 1) {
+					new Actions(driver).moveToElement(rows.get(0)).pause(80).doubleClick().perform();
+					return;
+				}
+			} catch (RuntimeException ignored) {
+			}
 			throw new NoSuchElementException(
-					"entryView: не найдена строка с заголовком, содержащим «" + titleSubstring + "»", e);
+					"entryView: no row with title containing \"" + titleSubstring + "\"", e);
 		} finally {
 			driver.manage().timeouts().implicitlyWait(IMPLICIT_RESTORE_SEC, TimeUnit.SECONDS);
 		}
 	}
 
-	/**
-	 * После «Отмена» на новой записи KeePassXC спрашивает «Unsaved Changes» —
-	 * нужно нажать {@code Discard} (QPushButton без AutomationId), иначе список
-	 * не обновится и следующий New Entry ведёт себя непредсказуемо.
-	 */
 	public void dismissUnsavedChangesDiscardIfPresent() {
 		driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
 		try {
@@ -287,6 +279,22 @@ public class MainWindowPage {
 		}
 	}
 
+	public boolean entryListContainsTitleSubstring(String titleSubstring) {
+		if (titleSubstring == null || titleSubstring.isEmpty()) {
+			return false;
+		}
+		driver.manage().timeouts().implicitlyWait(0, TimeUnit.MILLISECONDS);
+		try {
+			List<WebElement> lists = driver.findElements(MobileBy.AccessibilityId(KeePassAccessibility.MAIN_ENTRY_VIEW));
+			if (lists.isEmpty()) {
+				return false;
+			}
+			return findEntryRowContaining(lists.get(0), titleSubstring) != null;
+		} finally {
+			driver.manage().timeouts().implicitlyWait(IMPLICIT_RESTORE_SEC, TimeUnit.SECONDS);
+		}
+	}
+
 	private static WebElement findQPushButtonByName(WebElement root, String name) {
 		List<WebElement> found = root.findElements(By.xpath(".//*[@ClassName='QPushButton' and @Name='" + name + "']"));
 		return found.isEmpty() ? null : found.get(0);
@@ -297,20 +305,11 @@ public class MainWindowPage {
 			return null;
 		}
 		try {
-			List<WebElement> byName = list.findElements(By.xpath(".//*[contains(@Name,'" + needle + "')]"));
-			for (WebElement inner : byName) {
-				WebElement row = ascendToEntryRow(inner);
-				if (row != null) {
-					return row;
-				}
-			}
-			for (WebElement inner : list.findElements(By.xpath(".//*"))) {
-				if (!elementTextBundle(inner).contains(needle)) {
-					continue;
-				}
-				WebElement row = ascendToEntryRow(inner);
-				if (row != null) {
-					return row;
+			List<WebElement> rows = list
+					.findElements(By.xpath(".//ListItem | .//DataItem | .//TreeItem | .//ListBoxItem"));
+			for (int i = 0; i < rows.size(); i++) {
+				if (rowSubtreeContainsNeedle(rows.get(i), needle)) {
+					return rows.get(i);
 				}
 			}
 		} catch (StaleElementReferenceException e) {
@@ -319,21 +318,20 @@ public class MainWindowPage {
 		return null;
 	}
 
-	private static WebElement ascendToEntryRow(WebElement inner) {
-		WebElement cur = inner;
-		for (int depth = 0; depth < 40 && cur != null; depth++) {
-			String tag = cur.getTagName();
-			if ("ListItem".equalsIgnoreCase(tag) || "DataItem".equalsIgnoreCase(tag) || "TreeItem".equalsIgnoreCase(tag)
-					|| "Custom".equalsIgnoreCase(tag)) {
-				return cur;
+	private static boolean rowSubtreeContainsNeedle(WebElement row, String needle) {
+		if (elementTextBundle(row).contains(needle)) {
+			return true;
+		}
+		int seen = 0;
+		for (WebElement el : row.findElements(By.xpath(".//*"))) {
+			if (elementTextBundle(el).contains(needle)) {
+				return true;
 			}
-			try {
-				cur = cur.findElement(By.xpath(".."));
-			} catch (NoSuchElementException e) {
+			if (++seen > 200) {
 				break;
 			}
 		}
-		return null;
+		return false;
 	}
 
 	private static String elementTextBundle(WebElement el) {
@@ -350,7 +348,6 @@ public class MainWindowPage {
 				sb.append(t);
 			}
 		} catch (RuntimeException ignored) {
-			// ignore
 		}
 		return sb.toString();
 	}

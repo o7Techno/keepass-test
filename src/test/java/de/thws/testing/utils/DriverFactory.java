@@ -20,18 +20,11 @@ public class DriverFactory {
 		return createKeePassDriverOpeningDatabase(null);
 	}
 
-	/** Запуск без файла — экран приветствия / последнее состояние приложения. */
 	@SuppressWarnings("rawtypes")
 	public static WindowsDriver createKeePassDriverWithoutDatabaseFile() {
 		return createKeePassDriverOpeningDatabase(null);
 	}
 
-	/**
-	 * При старте сразу открывает указанный {@code .kdbx} — появляется экран Unlock
-	 * (или главное окно). Аргумент передаётся в WinAppDriver как {@code appArguments}.
-	 *
-	 * @param absoluteDatabasePath полный путь к файлу или {@code null}
-	 */
 	@SuppressWarnings("rawtypes")
 	public static WindowsDriver createKeePassDriverOpeningDatabase(String absoluteDatabasePath) {
 		try {
@@ -44,12 +37,11 @@ public class DriverFactory {
 
 			WindowsDriver driver = new WindowsDriver(new URL(WIN_APP_DRIVER_URL), capabilities);
 
-			// Selenium 3 tarzı bekleme kodu
 			driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
 
 			return driver;
 		} catch (Exception e) {
-			throw new RuntimeException("Driver başlatılamadı: " + e.getMessage());
+			throw new RuntimeException("Failed to start driver: " + e.getMessage(), e);
 		}
 	}
 
