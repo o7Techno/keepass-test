@@ -221,9 +221,9 @@ public class EntryTabTest {
 	}
 
 	@Test
-	@Order(10)
-	public void test11_expiry_presets_menu_stillOnAfterSave() throws InterruptedException {
-		String marker = "T11Pre";
+	@Order(11)
+	public void test12_expiry_presets_menu_stillOnAfterSave() throws InterruptedException {
+		String marker = "T12Pre";
 		entry.setTitle(marker + " Row");
 		entry.setExpires(true);
 		Thread.sleep(200);
@@ -237,9 +237,9 @@ public class EntryTabTest {
 	}
 
 	@Test
-	@Order(11)
+	@Order(10)
 	public void test12_notes_multiline_persistAfterSave() throws InterruptedException {
-		String marker = "T12Note";
+		String marker = "T11Note";
 		entry.setTitle(marker + " Row");
 		String text = "Line one\nLine two\nThird line.";
 		entry.setNotes(text);
